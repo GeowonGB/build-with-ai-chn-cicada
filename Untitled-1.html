@@ -1,0 +1,2329 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FarmSense — AI-Powered Agricultural Intelligence</title>
+
+    <!-- Fonts: Playfair Display (display) + DM Sans (body) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,800;1,400&family=DM+Sans:wght@300;400;500;600&display=swap"
+        rel="stylesheet" />
+
+    <style>
+        /* ============================================================
+       DESIGN TOKENS — earthy, warm, biopunk aesthetic
+       ============================================================ */
+        :root {
+            --soil: #1a1209;
+            --earth: #2c1f0e;
+            --bark: #3d2b12;
+            --humus: #5c4020;
+            --clay: #8a6040;
+            --sand: #c4a06a;
+            --straw: #e8c98a;
+            --cream: #f5edd8;
+            --leaf: #3a6b35;
+            --sage: #5a8f53;
+            --moss: #7ab872;
+            --mint: #a8d8a0;
+            --dew: #d4edcc;
+            --sky: #7ab8c8;
+            --alert-red: #c0392b;
+            --alert-amber: #e67e22;
+            --alert-green: #27ae60;
+            --glass-bg: rgba(255, 255, 255, 0.06);
+            --glass-border: rgba(255, 255, 255, 0.12);
+            --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            --font-display: 'Playfair Display', Georgia, serif;
+            --font-body: 'DM Sans', system-ui, sans-serif;
+        }
+
+        /* ============================================================
+       RESET + BASE
+       ============================================================ */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background-color: var(--soil);
+            color: var(--cream);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated grain texture overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.4;
+        }
+
+        /* Rich earth background gradient */
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80% 60% at 20% 10%, rgba(90, 143, 83, 0.12) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 40% at 80% 80%, rgba(122, 184, 200, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse 100% 80% at 50% 50%, rgba(44, 31, 14, 0.5) 0%, transparent 100%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ============================================================
+       LAYOUT WRAPPER
+       ============================================================ */
+        .app-wrapper {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ============================================================
+       NAVIGATION HEADER
+       ============================================================ */
+        .nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 2rem;
+            background: rgba(26, 18, 9, 0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .nav-logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--sage), var(--moss));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            box-shadow: 0 0 20px rgba(90, 143, 83, 0.4);
+        }
+
+        .nav-logo-text {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(90deg, var(--straw), var(--mint));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-tagline {
+            font-size: 0.7rem;
+            color: var(--sand);
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+
+        .nav-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            color: var(--sage);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--moss);
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-dot {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(122, 184, 114, 0.6);
+            }
+
+            50% {
+                box-shadow: 0 0 0 6px rgba(122, 184, 114, 0);
+            }
+        }
+
+        /* ============================================================
+       CONFIGURATION PANEL (API keys + Drive)
+       ============================================================ */
+        .config-banner {
+            margin: 1.5rem 2rem;
+            padding: 1rem 1.5rem;
+            background: rgba(92, 64, 32, 0.3);
+            border: 1px solid rgba(196, 160, 106, 0.3);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .config-banner-icon {
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+
+        .config-banner-text {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .config-banner-text strong {
+            color: var(--straw);
+            display: block;
+            margin-bottom: 0.2rem;
+        }
+
+        .config-banner-text p {
+            font-size: 0.82rem;
+            color: var(--sand);
+            line-height: 1.5;
+        }
+
+        .config-toggle-btn {
+            padding: 0.5rem 1.2rem;
+            background: linear-gradient(135deg, var(--humus), var(--clay));
+            border: 1px solid var(--sand);
+            border-radius: 8px;
+            color: var(--cream);
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .config-toggle-btn:hover {
+            background: linear-gradient(135deg, var(--clay), var(--sand));
+        }
+
+        .config-panel {
+            margin: 0 2rem 1.5rem;
+            padding: 1.5rem;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            backdrop-filter: blur(12px);
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+
+        .config-panel.open {
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .config-field label {
+            display: block;
+            font-size: 0.78rem;
+            color: var(--sand);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 0.4rem;
+        }
+
+        .config-field input {
+            width: 100%;
+            padding: 0.65rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            color: var(--cream);
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            transition: border-color 0.2s;
+        }
+
+        .config-field input:focus {
+            outline: none;
+            border-color: var(--moss);
+        }
+
+        .config-save-btn {
+            padding: 0.6rem 1.5rem;
+            background: linear-gradient(135deg, var(--leaf), var(--sage));
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .config-save-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(58, 107, 53, 0.4);
+        }
+
+        /* ============================================================
+       MAIN CONTENT GRID
+       ============================================================ */
+        .main-content {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 2rem;
+            padding: 0 2rem 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                padding: 0 1rem 2rem;
+            }
+
+            .nav {
+                padding: 1rem;
+            }
+
+            .config-banner,
+            .config-panel {
+                margin: 1rem;
+            }
+        }
+
+        /* ============================================================
+       SIDEBAR — FARM INPUT FORM
+       ============================================================ */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .panel {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 1.5rem;
+            backdrop-filter: blur(16px);
+            box-shadow: var(--card-shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--sage), transparent);
+        }
+
+        .panel-title {
+            font-family: var(--font-display);
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--straw);
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .panel-title .icon {
+            font-size: 1.1rem;
+        }
+
+        /* Form Fields */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.78rem;
+            color: var(--sand);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 0.45rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: var(--cream);
+            font-family: var(--font-body);
+            font-size: 0.92rem;
+            transition: all 0.2s;
+            appearance: none;
+        }
+
+        .form-group select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23c4a06a' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            padding-right: 2.5rem;
+        }
+
+        .form-group select option {
+            background: var(--bark);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--sage);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 3px rgba(90, 143, 83, 0.15);
+        }
+
+        .form-group input::placeholder {
+            color: rgba(196, 160, 106, 0.4);
+        }
+
+        /* Validation error */
+        .field-error {
+            font-size: 0.75rem;
+            color: #e74c3c;
+            margin-top: 0.3rem;
+            display: none;
+        }
+
+        .field-error.visible {
+            display: block;
+        }
+
+        /* Analyze Button */
+        .analyze-btn {
+            width: 100%;
+            padding: 0.9rem;
+            background: linear-gradient(135deg, var(--leaf) 0%, var(--sage) 50%, var(--moss) 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-family: var(--font-body);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            letter-spacing: 0.02em;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .analyze-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .analyze-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(58, 107, 53, 0.5);
+        }
+
+        .analyze-btn:hover::before {
+            opacity: 1;
+        }
+
+        .analyze-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-inner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        /* ============================================================
+       WEATHER WIDGET
+       ============================================================ */
+        .weather-widget {
+            background: linear-gradient(135deg, rgba(122, 184, 200, 0.1), rgba(90, 143, 83, 0.1));
+            border: 1px solid rgba(122, 184, 200, 0.2);
+            border-radius: 16px;
+            padding: 1.2rem;
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .weather-widget.visible {
+            display: block;
+        }
+
+        .weather-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+        }
+
+        .weather-location {
+            font-size: 0.8rem;
+            color: var(--sand);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .weather-icon {
+            font-size: 2rem;
+        }
+
+        .weather-temp {
+            font-family: var(--font-display);
+            font-size: 2.2rem;
+            color: var(--straw);
+            line-height: 1;
+        }
+
+        .weather-desc {
+            font-size: 0.85rem;
+            color: var(--mint);
+            text-transform: capitalize;
+            margin-top: 0.2rem;
+        }
+
+        .weather-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.6rem;
+            margin-top: 1rem;
+        }
+
+        .weather-stat {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 0.5rem 0.75rem;
+        }
+
+        .weather-stat-label {
+            font-size: 0.7rem;
+            color: var(--clay);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .weather-stat-value {
+            font-size: 0.95rem;
+            color: var(--cream);
+            font-weight: 500;
+            margin-top: 0.1rem;
+        }
+
+        /* ============================================================
+       ALERTS PANEL
+       ============================================================ */
+        .alert-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .alert-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            animation: slideIn 0.3s ease both;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .alert-item.danger {
+            background: rgba(192, 57, 43, 0.2);
+            border: 1px solid rgba(192, 57, 43, 0.3);
+        }
+
+        .alert-item.warning {
+            background: rgba(230, 126, 34, 0.2);
+            border: 1px solid rgba(230, 126, 34, 0.3);
+        }
+
+        .alert-item.info {
+            background: rgba(58, 107, 53, 0.2);
+            border: 1px solid rgba(90, 143, 83, 0.3);
+        }
+
+        .alert-icon {
+            font-size: 1rem;
+            flex-shrink: 0;
+            margin-top: 0.05rem;
+        }
+
+        .alert-text {
+            color: var(--cream);
+        }
+
+        /* ============================================================
+       DASHBOARD — RIGHT SIDE
+       ============================================================ */
+        .dashboard {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* Hero Section */
+        .dashboard-hero {
+            text-align: center;
+            padding: 2.5rem 2rem;
+            background: linear-gradient(135deg,
+                    rgba(58, 107, 53, 0.15) 0%,
+                    rgba(26, 18, 9, 0.5) 50%,
+                    rgba(122, 184, 200, 0.08) 100%);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dashboard-hero::after {
+            content: '🌾';
+            position: absolute;
+            right: 2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 5rem;
+            opacity: 0.08;
+            pointer-events: none;
+        }
+
+        .hero-eyebrow {
+            font-size: 0.75rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--sage);
+            margin-bottom: 0.5rem;
+        }
+
+        .hero-title {
+            font-family: var(--font-display);
+            font-size: clamp(1.6rem, 3vw, 2.4rem);
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 0.75rem;
+            background: linear-gradient(135deg, var(--straw), var(--mint), var(--sky));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-sub {
+            font-size: 0.9rem;
+            color: var(--sand);
+            max-width: 420px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* Insight Cards Grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.2rem;
+        }
+
+        .insight-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 18px;
+            padding: 1.4rem;
+            backdrop-filter: blur(12px);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .insight-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(122, 184, 114, 0.3);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Top colored stripe per card type */
+        .insight-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            border-radius: 18px 18px 0 0;
+        }
+
+        .card-soil::before {
+            background: linear-gradient(90deg, #8B6914, #d4a43a);
+        }
+
+        .card-watering::before {
+            background: linear-gradient(90deg, #1a6b8a, #7ab8c8);
+        }
+
+        .card-fertilizer::before {
+            background: linear-gradient(90deg, #3a6b35, #7ab872);
+        }
+
+        .card-pest::before {
+            background: linear-gradient(90deg, #8B1a1a, #c0392b);
+        }
+
+        .card-plan::before {
+            background: linear-gradient(90deg, #5a3a8a, #9b59b6);
+        }
+
+        .card-harvest::before {
+            background: linear-gradient(90deg, #8a6b1a, #e8c98a);
+        }
+
+        .card-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .card-soil .card-icon {
+            background: rgba(139, 105, 20, 0.25);
+        }
+
+        .card-watering .card-icon {
+            background: rgba(26, 107, 138, 0.25);
+        }
+
+        .card-fertilizer .card-icon {
+            background: rgba(58, 107, 53, 0.25);
+        }
+
+        .card-pest .card-icon {
+            background: rgba(139, 26, 26, 0.25);
+        }
+
+        .card-plan .card-icon {
+            background: rgba(90, 58, 138, 0.25);
+        }
+
+        .card-harvest .card-icon {
+            background: rgba(138, 107, 26, 0.25);
+        }
+
+        .card-label {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--clay);
+            font-weight: 500;
+        }
+
+        .card-value {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            color: var(--straw);
+            line-height: 1.3;
+        }
+
+        .card-detail {
+            font-size: 0.82rem;
+            color: var(--sand);
+            line-height: 1.5;
+            flex: 1;
+        }
+
+        /* Skeleton loading state */
+        .skeleton {
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.05) 25%, rgba(255, 255, 255, 0.1) 50%, rgba(255, 255, 255, 0.05) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 6px;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        .card-loading .card-value {
+            height: 24px;
+            width: 70%;
+        }
+
+        .card-loading .card-detail {
+            height: 60px;
+            width: 100%;
+        }
+
+        /* ============================================================
+       CROP ROTATION CARD
+       ============================================================ */
+        .rotation-card {
+            background: linear-gradient(135deg,
+                    rgba(58, 107, 53, 0.2) 0%,
+                    rgba(26, 18, 9, 0.6) 100%);
+            border: 1px solid rgba(90, 143, 83, 0.4);
+            border-radius: 20px;
+            padding: 1.8rem;
+            position: relative;
+            overflow: hidden;
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .rotation-card.visible {
+            display: block;
+        }
+
+        .rotation-card::before {
+            content: '🔄';
+            position: absolute;
+            right: 1.5rem;
+            top: 1.5rem;
+            font-size: 2.5rem;
+            opacity: 0.15;
+        }
+
+        .rotation-title {
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+            color: var(--mint);
+            margin-bottom: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .rotation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+        }
+
+        .rotation-stat {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 1rem;
+        }
+
+        .rotation-stat-label {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--sage);
+            margin-bottom: 0.4rem;
+        }
+
+        .rotation-stat-value {
+            font-size: 1rem;
+            color: var(--cream);
+            font-weight: 500;
+            line-height: 1.4;
+        }
+
+        .next-crop-name {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--moss), var(--mint));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* ============================================================
+       HISTORY TABLE
+       ============================================================ */
+        .history-section {
+            display: none;
+        }
+
+        .history-section.visible {
+            display: block;
+        }
+
+        .history-table-wrapper {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        thead tr {
+            background: rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        th {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--sand);
+            font-weight: 500;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            transition: background 0.2s;
+        }
+
+        tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        tbody tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        td {
+            padding: 0.75rem 1rem;
+            color: var(--cream);
+            vertical-align: middle;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.65rem;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .status-active {
+            background: rgba(39, 174, 96, 0.2);
+            color: var(--moss);
+            border: 1px solid rgba(39, 174, 96, 0.3);
+        }
+
+        .status-completed {
+            background: rgba(138, 96, 64, 0.2);
+            color: var(--sand);
+            border: 1px solid rgba(138, 96, 64, 0.3);
+        }
+
+        .complete-btn {
+            padding: 0.3rem 0.75rem;
+            background: rgba(58, 107, 53, 0.3);
+            border: 1px solid var(--sage);
+            border-radius: 6px;
+            color: var(--moss);
+            font-family: var(--font-body);
+            font-size: 0.78rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .complete-btn:hover {
+            background: rgba(58, 107, 53, 0.5);
+        }
+
+        .complete-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* ============================================================
+       SPINNER / LOADING OVERLAY
+       ============================================================ */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(26, 18, 9, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 500;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .spinner-container {
+            position: relative;
+            width: 72px;
+            height: 72px;
+        }
+
+        .spinner-ring {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 3px solid transparent;
+        }
+
+        .spinner-ring:nth-child(1) {
+            border-top-color: var(--moss);
+            animation: spin 1.2s linear infinite;
+        }
+
+        .spinner-ring:nth-child(2) {
+            inset: 8px;
+            border-right-color: var(--sky);
+            animation: spin 0.9s linear infinite reverse;
+        }
+
+        .spinner-ring:nth-child(3) {
+            inset: 16px;
+            border-bottom-color: var(--straw);
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-text {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            color: var(--straw);
+            animation: fade-pulse 1.5s ease-in-out infinite;
+        }
+
+        .loading-step {
+            font-size: 0.8rem;
+            color: var(--sand);
+        }
+
+        @keyframes fade-pulse {
+
+            0%,
+            100% {
+                opacity: 0.6;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        /* ============================================================
+       EMPTY STATE
+       ============================================================ */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: var(--clay);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-family: var(--font-display);
+            font-size: 1.2rem;
+            color: var(--sand);
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state p {
+            font-size: 0.85rem;
+            line-height: 1.6;
+            max-width: 280px;
+            margin: 0 auto;
+        }
+
+        /* ============================================================
+       TOAST NOTIFICATIONS
+       ============================================================ */
+        .toast-container {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            z-index: 600;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .toast {
+            padding: 0.85rem 1.25rem;
+            border-radius: 12px;
+            font-size: 0.88rem;
+            max-width: 320px;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            animation: toast-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        @keyframes toast-in {
+            from {
+                opacity: 0;
+                transform: translateX(100px) scale(0.8);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
+        }
+
+        @keyframes toast-out {
+            to {
+                opacity: 0;
+                transform: translateX(100px) scale(0.8);
+            }
+        }
+
+        .toast.success {
+            background: rgba(39, 174, 96, 0.25);
+            border: 1px solid rgba(39, 174, 96, 0.4);
+            color: var(--mint);
+        }
+
+        .toast.error {
+            background: rgba(192, 57, 43, 0.25);
+            border: 1px solid rgba(192, 57, 43, 0.4);
+            color: #e74c3c;
+        }
+
+        .toast.info {
+            background: rgba(122, 184, 200, 0.2);
+            border: 1px solid rgba(122, 184, 200, 0.3);
+            color: var(--sky);
+        }
+
+        /* ============================================================
+       SECTION HEADERS
+       ============================================================ */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            color: var(--straw);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-badge {
+            font-size: 0.72rem;
+            background: rgba(90, 143, 83, 0.25);
+            color: var(--moss);
+            border: 1px solid rgba(90, 143, 83, 0.3);
+            border-radius: 20px;
+            padding: 0.2rem 0.6rem;
+            font-family: var(--font-body);
+            font-weight: 400;
+        }
+
+        .refresh-btn {
+            padding: 0.4rem 0.9rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            color: var(--sand);
+            font-family: var(--font-body);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .refresh-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--cream);
+        }
+
+        /* ============================================================
+       ANIMATIONS
+       ============================================================ */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-in {
+            animation: fadeIn 0.5s ease both;
+        }
+
+        /* Staggered card animation delays */
+        .cards-grid .insight-card:nth-child(1) {
+            animation-delay: 0.05s;
+        }
+
+        .cards-grid .insight-card:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+
+        .cards-grid .insight-card:nth-child(3) {
+            animation-delay: 0.15s;
+        }
+
+        .cards-grid .insight-card:nth-child(4) {
+            animation-delay: 0.2s;
+        }
+
+        .cards-grid .insight-card:nth-child(5) {
+            animation-delay: 0.25s;
+        }
+
+        .cards-grid .insight-card:nth-child(6) {
+            animation-delay: 0.3s;
+        }
+
+        /* ============================================================
+       SCROLLBAR STYLING
+       ============================================================ */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--soil);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--humus);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--clay);
+        }
+
+        /* ============================================================
+       FOOTER
+       ============================================================ */
+        .footer {
+            text-align: center;
+            padding: 1.5rem;
+            border-top: 1px solid var(--glass-border);
+            font-size: 0.78rem;
+            color: var(--humus);
+            margin-top: 2rem;
+        }
+
+        .footer a {
+            color: var(--clay);
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            color: var(--sand);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ============================================================
+     LOADING OVERLAY
+     ============================================================ -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner-container">
+            <div class="spinner-ring"></div>
+            <div class="spinner-ring"></div>
+            <div class="spinner-ring"></div>
+        </div>
+        <div class="loading-text">Analyzing your farm data…</div>
+        <div class="loading-step" id="loadingStep">Fetching weather conditions</div>
+    </div>
+
+    <!-- ============================================================
+     TOAST CONTAINER
+     ============================================================ -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- ============================================================
+     APP WRAPPER
+     ============================================================ -->
+    <div class="app-wrapper">
+
+        <!-- NAV -->
+        <nav class="nav">
+            <div class="nav-logo">
+                <div class="nav-logo-icon">🌱</div>
+                <div>
+                    <div class="nav-logo-text">FarmSense</div>
+                    <div class="nav-tagline">AI Agricultural Intelligence</div>
+                </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:1rem;">
+                <div class="nav-status">
+                    <div class="status-dot"></div>
+                    <span>System Operational</span>
+                </div>
+                <button class="config-toggle-btn" onclick="toggleConfig()">⚙️ Configure APIs</button>
+            </div>
+        </nav>
+
+        <!-- CONFIG BANNER -->
+        <div class="config-banner">
+            <div class="config-banner-icon">🔑</div>
+            <div class="config-banner-text">
+                <strong>API Configuration Required</strong>
+                <p>Enter your Gemini, OpenWeatherMap, and Google Drive API credentials to enable full functionality.
+                    Keys are stored in your browser's session only.</p>
+            </div>
+            <button class="config-toggle-btn" onclick="toggleConfig()">Set Up Keys</button>
+        </div>
+
+        <!-- CONFIG PANEL -->
+        <div class="config-panel" id="configPanel">
+            <div class="config-grid">
+                <div class="config-field">
+                    <label>🤖 Gemini API Key</label>
+                    <input type="password" id="cfgGeminiKey" placeholder="AIzaSy..." autocomplete="off" />
+                </div>
+                <div class="config-field">
+                    <label>🌤️ OpenWeatherMap API Key</label>
+                    <input type="password" id="cfgWeatherKey" placeholder="abc123..." autocomplete="off" />
+                </div>
+                <div class="config-field">
+                    <label>📁 Google Drive File ID (optional)</label>
+                    <input type="text" id="cfgDriveFileId" placeholder="1BxiMVs0XRA..." autocomplete="off" />
+                </div>
+                <div class="config-field">
+                    <label>🔐 Google Drive Access Token (optional)</label>
+                    <input type="password" id="cfgDriveToken" placeholder="ya29.a0..." autocomplete="off" />
+                </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+                <button class="config-save-btn" onclick="saveConfig()">💾 Save Configuration</button>
+                <span style="font-size:0.78rem;color:var(--clay);">
+                    ⚠️ Production Note: Keys should be stored server-side in environment variables or a secrets manager,
+                    never in client-side JS.
+                </span>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+
+            <!-- ====================================================
+         SIDEBAR
+         ==================================================== -->
+            <aside class="sidebar">
+
+                <!-- FARM INPUT FORM -->
+                <div class="panel">
+                    <div class="panel-title"><span class="icon">🌾</span> Farm Analysis</div>
+
+                    <div class="form-group">
+                        <label>Location / City</label>
+                        <input type="text" id="location" placeholder="e.g. Bangalore, India" />
+                        <div class="field-error" id="err-location">Please enter a valid location.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Crop Name</label>
+                        <input type="text" id="crop" placeholder="e.g. Rice, Wheat, Tomato" />
+                        <div class="field-error" id="err-crop">Please enter your current crop.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Soil Condition</label>
+                        <select id="soil">
+                            <option value="">— Select Soil Type —</option>
+                            <option value="loamy">Loamy (Ideal)</option>
+                            <option value="sandy">Sandy (Well-drained)</option>
+                            <option value="clay">Clay (Heavy)</option>
+                            <option value="silty">Silty (Fine-textured)</option>
+                            <option value="peaty">Peaty (High organic)</option>
+                            <option value="chalky">Chalky (Alkaline)</option>
+                        </select>
+                        <div class="field-error" id="err-soil">Please select a soil type.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Growth Stage</label>
+                        <select id="stage">
+                            <option value="">— Select Stage —</option>
+                            <option value="germination">🌱 Germination (0–14 days)</option>
+                            <option value="seedling">🪴 Seedling (15–30 days)</option>
+                            <option value="vegetative">🌿 Vegetative Growth</option>
+                            <option value="flowering">🌸 Flowering / Budding</option>
+                            <option value="fruiting">🍅 Fruiting / Pod Formation</option>
+                            <option value="ripening">🌾 Ripening / Maturation</option>
+                            <option value="pre-harvest">✂️ Pre-Harvest</option>
+                        </select>
+                        <div class="field-error" id="err-stage">Please select a growth stage.</div>
+                    </div>
+
+                    <button class="analyze-btn" id="analyzeBtn" onclick="runAnalysis()">
+                        <span class="btn-inner">🔍 Analyze & Get AI Insights</span>
+                    </button>
+                </div>
+
+                <!-- WEATHER WIDGET -->
+                <div class="weather-widget" id="weatherWidget">
+                    <div class="weather-header">
+                        <div>
+                            <div class="weather-location" id="wLocation">—</div>
+                            <div class="weather-temp" id="wTemp">—</div>
+                            <div class="weather-desc" id="wDesc">—</div>
+                        </div>
+                        <div class="weather-icon" id="wIcon">☁️</div>
+                    </div>
+                    <div class="weather-stats">
+                        <div class="weather-stat">
+                            <div class="weather-stat-label">Humidity</div>
+                            <div class="weather-stat-value" id="wHumidity">—</div>
+                        </div>
+                        <div class="weather-stat">
+                            <div class="weather-stat-label">Wind</div>
+                            <div class="weather-stat-value" id="wWind">—</div>
+                        </div>
+                        <div class="weather-stat">
+                            <div class="weather-stat-label">Pressure</div>
+                            <div class="weather-stat-value" id="wPressure">—</div>
+                        </div>
+                        <div class="weather-stat">
+                            <div class="weather-stat-label">Visibility</div>
+                            <div class="weather-stat-value" id="wVis">—</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ALERTS PANEL -->
+                <div class="panel">
+                    <div class="panel-title"><span class="icon">🔔</span> Active Alerts</div>
+                    <div class="alert-list" id="alertList">
+                        <div style="font-size:0.85rem;color:var(--clay);text-align:center;padding:1rem 0;">
+                            Run an analysis to generate alerts.
+                        </div>
+                    </div>
+                </div>
+
+            </aside>
+
+            <!-- ====================================================
+         DASHBOARD
+         ==================================================== -->
+            <div class="dashboard">
+
+                <!-- HERO -->
+                <div class="dashboard-hero" id="dashboardHero">
+                    <div class="hero-eyebrow">AI-Powered Decision Support</div>
+                    <h1 class="hero-title">Your Farm's Intelligence Hub</h1>
+                    <p class="hero-sub">Enter your farm details on the left to receive real-time AI recommendations,
+                        weather integration, and continuous crop monitoring.</p>
+                </div>
+
+                <!-- AI INSIGHTS CARDS -->
+                <div>
+                    <div class="section-header">
+                        <div class="section-title">🧠 AI Insights <span class="section-badge" id="insightBadge">Awaiting
+                                Data</span></div>
+                    </div>
+                    <div class="cards-grid" id="cardsGrid">
+                        <!-- Empty state -->
+                        <div style="grid-column:1/-1;" class="empty-state">
+                            <div class="empty-state-icon">🌾</div>
+                            <h3>No Analysis Yet</h3>
+                            <p>Fill in your farm details and click "Analyze" to receive personalized AI recommendations.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CROP ROTATION RECOMMENDATION -->
+                <div class="rotation-card" id="rotationCard">
+                    <div class="rotation-title">🔄 Next Crop Recommendation</div>
+                    <div class="rotation-grid" id="rotationGrid">
+                        <!-- populated by JS -->
+                    </div>
+                </div>
+
+                <!-- FARM HISTORY -->
+                <div class="panel history-section" id="historySection">
+                    <div class="section-header">
+                        <div class="section-title">📋 Farm History <span class="section-badge" id="historyBadge">0
+                                Records</span></div>
+                        <button class="refresh-btn" onclick="renderDashboard()">↻ Refresh</button>
+                    </div>
+                    <div class="history-table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Location</th>
+                                    <th>Crop</th>
+                                    <th>Soil</th>
+                                    <th>Stage</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <footer class="footer">
+            FarmSense &copy; 2025 — AI-Powered Agricultural Intelligence &nbsp;|&nbsp;
+            <a href="#">Documentation</a> &nbsp;|&nbsp;
+            <a href="#">GitHub</a> &nbsp;|&nbsp;
+            Built with Gemini AI + OpenWeatherMap
+            <br><br>
+            <small>⚠️ In production: API keys should be stored as server-side environment variables. Drive OAuth should
+                use PKCE flow with a secure backend token exchange.</small>
+        </footer>
+
+    </div><!-- end app-wrapper -->
+
+    <!-- ============================================================
+     JAVASCRIPT — MODULAR ARCHITECTURE
+     ============================================================ -->
+    <script>
+        "use strict";
+
+        /* ================================================================
+           MODULE: CONFIG
+           Manages API keys stored in sessionStorage.
+           In production these would come from a secure backend.
+        ================================================================ */
+        const Config = (() => {
+            // Fallback demo keys — replace or set via UI
+            const DEFAULTS = {
+                geminiKey: "AIzaSyCNMpTVBlS0bIzI44Ms454FUxSok7uvRb4",
+                weatherKey: "9f05213f829bf512d0d39284f42c2594",
+                driveFileId: "",
+                driveToken: "",
+            };
+
+            const load = () => ({
+                geminiKey: sessionStorage.getItem("fs_gemini") || DEFAULTS.geminiKey,
+                weatherKey: sessionStorage.getItem("fs_weather") || DEFAULTS.weatherKey,
+                driveFileId: sessionStorage.getItem("fs_driveId") || DEFAULTS.driveFileId,
+                driveToken: sessionStorage.getItem("fs_driveToken") || DEFAULTS.driveToken,
+            });
+
+            const save = ({ geminiKey, weatherKey, driveFileId, driveToken }) => {
+                sessionStorage.setItem("fs_gemini", geminiKey);
+                sessionStorage.setItem("fs_weather", weatherKey);
+                sessionStorage.setItem("fs_driveId", driveFileId);
+                sessionStorage.setItem("fs_driveToken", driveToken);
+            };
+
+            return { load, save };
+        })();
+
+        /* ================================================================
+           MODULE: STATE
+           Central reactive store for the application.
+        ================================================================ */
+        const State = (() => {
+            let _farms = JSON.parse(localStorage.getItem("fs_farms") || "[]");
+            let _currentWeather = null;
+            let _lastRecommendation = null;
+
+            const persist = () => localStorage.setItem("fs_farms", JSON.stringify(_farms));
+
+            return {
+                getFarms: () => [..._farms],
+                addFarm: (farm) => { _farms.push(farm); persist(); },
+                updateFarm: (idx, patch) => { Object.assign(_farms[idx], patch); persist(); },
+                setWeather: (w) => { _currentWeather = w; },
+                getWeather: () => _currentWeather,
+                setRec: (r) => { _lastRecommendation = r; },
+                getRec: () => _lastRecommendation,
+            };
+        })();
+
+        /* ================================================================
+           MODULE: FORM
+           getFormData + validateInput
+        ================================================================ */
+        const Form = (() => {
+            const getFormData = () => ({
+                location: document.getElementById("location").value.trim(),
+                crop: document.getElementById("crop").value.trim(),
+                soil: document.getElementById("soil").value,
+                stage: document.getElementById("stage").value,
+            });
+
+            const validateInput = (data) => {
+                let valid = true;
+                const fields = [
+                    ["location", "err-location"],
+                    ["crop", "err-crop"],
+                    ["soil", "err-soil"],
+                    ["stage", "err-stage"],
+                ];
+                fields.forEach(([key, errId]) => {
+                    const el = document.getElementById(errId);
+                    if (!data[key]) {
+                        el.classList.add("visible");
+                        valid = false;
+                    } else {
+                        el.classList.remove("visible");
+                    }
+                });
+                return valid;
+            };
+
+            return { getFormData, validateInput };
+        })();
+
+        /* ================================================================
+           MODULE: WEATHER API
+           Fetches real-time weather from OpenWeatherMap.
+           Falls back to demo data if key missing or request fails.
+        ================================================================ */
+        const Weather = (() => {
+            const WEATHER_ICONS = {
+                Clear: "☀️", Clouds: "⛅", Rain: "🌧️",
+                Drizzle: "🌦️", Thunderstorm: "⛈️", Snow: "❄️",
+                Mist: "🌫️", Fog: "🌁", default: "🌤️",
+            };
+
+            const fetchWeather = async (location) => {
+                const { weatherKey } = Config.load();
+
+                if (!weatherKey) {
+                    // Return plausible demo data
+                    console.warn("FarmSense: No weather key set — using demo data.");
+                    return buildDemoWeather(location);
+                }
+
+                try {
+                    const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(location)}&appid=${weatherKey}&units=metric`;
+                    const res = await fetch(url);
+
+                    if (!res.ok) {
+                        const err = await res.json();
+                        if (err.cod === "404") throw new Error(`Location "${location}" not found on OpenWeatherMap.`);
+                        throw new Error(`Weather API error: ${err.message}`);
+                    }
+
+                    const d = await res.json();
+                    return {
+                        location: `${d.name}, ${d.sys.country}`,
+                        temp: Math.round(d.main.temp),
+                        feels: Math.round(d.main.feels_like),
+                        humidity: d.main.humidity,
+                        wind: d.wind.speed,
+                        pressure: d.main.pressure,
+                        visibility: (d.visibility / 1000).toFixed(1),
+                        description: d.weather[0].description,
+                        main: d.weather[0].main,
+                        icon: WEATHER_ICONS[d.weather[0].main] || WEATHER_ICONS.default,
+                        isDemo: false,
+                    };
+                } catch (e) {
+                    console.error("Weather fetch failed:", e);
+                    UI.showToast(`Weather: ${e.message}. Using demo data.`, "info");
+                    return buildDemoWeather(location);
+                }
+            };
+
+            const buildDemoWeather = (location) => ({
+                location: location || "Demo Location",
+                temp: 28,
+                feels: 31,
+                humidity: 72,
+                wind: 4.2,
+                pressure: 1013,
+                visibility: 10,
+                description: "partly cloudy (demo)",
+                main: "Clouds",
+                icon: "⛅",
+                isDemo: true,
+            });
+
+            return { fetchWeather };
+        })();
+
+        /* ================================================================
+           MODULE: AI
+           Sends structured prompts to Gemini API.
+           Parses JSON from response; cleans markdown fences if present.
+        ================================================================ */
+        const AI = (() => {
+            const GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
+
+            const callGemini = async (prompt) => {
+                const { geminiKey } = Config.load();
+                if (!geminiKey) {
+                    console.warn("FarmSense: No Gemini key — returning demo AI response.");
+                    return null; // caller handles fallback
+                }
+
+                const body = {
+                    contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: {
+                        temperature: 0.4,
+                        topK: 32, topP: 0.95,
+                        maxOutputTokens: 1024,
+                    },
+                };
+
+                const res = await fetch(`${GEMINI_ENDPOINT}?key=${geminiKey}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(body),
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(`Gemini API error ${res.status}: ${err.error?.message || "Unknown error"}`);
+                }
+
+                const data = await res.json();
+                return data?.candidates?.[0]?.content?.parts?.[0]?.text || null;
+            };
+
+            // Safely parses JSON — removes ```json fences, strips control chars
+            const safeParseJSON = (raw) => {
+                if (!raw) return null;
+                let text = raw.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+                // Remove trailing commas (common LLM mistake)
+                text = text.replace(/,(\s*[}\]])/g, "$1");
+                try {
+                    return JSON.parse(text);
+                } catch {
+                    // Try extracting just the first {...} block
+                    const match = text.match(/\{[\s\S]+\}/);
+                    if (match) {
+                        try { return JSON.parse(match[0]); } catch { return null; }
+                    }
+                    return null;
+                }
+            };
+
+            const fetchAIRecommendation = async (farmData, weather) => {
+                const prompt = `
+You are an expert agricultural scientist and crop advisor. Analyze the following farm data and respond ONLY with a valid JSON object, no markdown, no explanation.
+
+FARM DATA:
+- Location: ${farmData.location}
+- Crop: ${farmData.crop}
+- Soil Type: ${farmData.soil}
+- Growth Stage: ${farmData.stage}
+
+CURRENT WEATHER:
+- Temperature: ${weather.temp}°C (Feels like ${weather.feels}°C)
+- Humidity: ${weather.humidity}%
+- Wind Speed: ${weather.wind} m/s
+- Description: ${weather.description}
+
+Respond with EXACTLY this JSON structure:
+{
+  "soilAssessment": "2-3 sentence assessment of current soil suitability for the crop",
+  "todayPlan": "Specific action plan for today based on weather and growth stage",
+  "watering": "Precise watering recommendation (liters/m2 or irrigation frequency)",
+  "fertilizer": "Specific fertilizer type, amount, and application timing",
+  "pest": "Top 2-3 pest/disease risks for this crop at this stage with prevention steps",
+  "harvest": "Estimated days to harvest and visual readiness indicators"
+}
+`;
+                const raw = await callGemini(prompt);
+                if (!raw) return buildDemoRec(farmData);
+
+                const parsed = safeParseJSON(raw);
+                if (!parsed) {
+                    console.warn("FarmSense: Could not parse Gemini response:", raw);
+                    return buildDemoRec(farmData);
+                }
+                return parsed;
+            };
+
+            const suggestNextCrop = async (history) => {
+                const recentCrops = history.slice(-5).map(f =>
+                    `${f.crop} on ${f.soil} soil at ${f.location} (${f.timestamp})`
+                ).join("; ");
+
+                const prompt = `
+You are a precision agriculture expert specializing in sustainable crop rotation.
+Based on the farm's historical data, recommend the next best crop to plant.
+
+FARM HISTORY (most recent 5 cycles):
+${recentCrops}
+
+Respond ONLY with a valid JSON object, no markdown:
+{
+  "nextCrop": "Recommended crop name",
+  "reason": "2-3 sentences explaining why this crop is ideal for rotation (soil health, nutrient cycle, pest management)",
+  "water": "Expected water requirement description",
+  "fertilizer": "Recommended fertilizer strategy for the next crop",
+  "soil": "Soil preparation steps needed before planting"
+}
+`;
+                const raw = await callGemini(prompt);
+                if (!raw) return buildDemoNextCrop();
+
+                const parsed = safeParseJSON(raw);
+                return parsed || buildDemoNextCrop();
+            };
+
+            // Demo fallback data
+            const buildDemoRec = (farmData) => ({
+                soilAssessment:
+                    `${farmData.soil || "Loamy"} soil is ${farmData.soil === "sandy" ? "well-drained but may need more frequent irrigation" : "well-suited"} for ${farmData.crop || "this crop"}. Organic matter content appears adequate for the ${farmData.stage || "current"} growth stage. pH monitoring is recommended every 2 weeks.`,
+                todayPlan:
+                    "Morning: Check soil moisture at 10cm depth. Afternoon: Scout for early pest signs along field edges. Evening: Apply organic mulch if temperatures exceed 30°C to retain moisture.",
+                watering:
+                    "Irrigate with 25-30mm of water every 3 days. Reduce to every 4 days if rainfall exceeds 15mm/week. Use drip irrigation to prevent leaf wetness.",
+                fertilizer:
+                    "Apply NPK 17-17-17 at 150kg/ha this week. Switch to potassium-rich fertilizer (0-0-60) in 3 weeks to support fruiting. Avoid urea during humid conditions.",
+                pest:
+                    "1. Aphids: High risk — spray neem oil (5ml/L) at dawn. 2. Leaf blight: Moderate risk — ensure good air circulation and avoid overhead watering. 3. Root rot: Low risk — improve drainage if waterlogging observed.",
+                harvest:
+                    "Estimated 28-35 days to harvest. Signs of readiness: firm texture, consistent color development, and natural leaf senescence. Harvest in early morning for best shelf life. (Demo data — add Gemini API key for real AI insights)",
+            });
+
+            const buildDemoNextCrop = () => ({
+                nextCrop: "Chickpea (Cicer arietinum)",
+                reason: "Chickpea is an excellent leguminous rotation crop that fixes atmospheric nitrogen, replenishing soil nutrients depleted by the previous crop. It naturally suppresses nematode populations and breaks cereal disease cycles.",
+                water: "Low-moderate. 400-500mm over the growing season. Drought-tolerant once established.",
+                fertilizer: "Minimal NPK needed due to N fixation. Apply 20kg P₂O₅/ha as starter dose. Inoculate seeds with Rhizobium culture.",
+                soil: "Deep-plough to 20cm, remove crop residue, and add 2-3 tons/ha of well-decomposed FYM. Adjust pH to 6.5-7.5 if needed.",
+            });
+
+            return { fetchAIRecommendation, suggestNextCrop };
+        })();
+
+        /* ================================================================
+           MODULE: DRIVE
+           Reads/writes farm data to Google Drive JSON file.
+           Falls back to localStorage if Drive not configured.
+        ================================================================ */
+        const Drive = (() => {
+            const DRIVE_API = "https://www.googleapis.com/drive/v3/files";
+            const UPLOAD_API = "https://www.googleapis.com/upload/drive/v3/files";
+
+            const readFromDrive = async () => {
+                const { driveFileId, driveToken } = Config.load();
+                if (!driveFileId || !driveToken) {
+                    // LocalStorage fallback
+                    return { farms: State.getFarms() };
+                }
+
+                try {
+                    const res = await fetch(
+                        `${DRIVE_API}/${driveFileId}?alt=media`,
+                        { headers: { Authorization: `Bearer ${driveToken}` } }
+                    );
+                    if (!res.ok) throw new Error(`Drive read failed: ${res.status}`);
+                    return await res.json();
+                } catch (e) {
+                    console.error("Drive read error:", e);
+                    UI.showToast("Drive read failed — using local storage.", "info");
+                    return { farms: State.getFarms() };
+                }
+            };
+
+            const saveToDrive = async (data) => {
+                const { driveFileId, driveToken } = Config.load();
+                if (!driveFileId || !driveToken) {
+                    // Just use localStorage
+                    localStorage.setItem("fs_farms", JSON.stringify(data.farms));
+                    return true;
+                }
+
+                return await updateDriveFile(driveFileId, driveToken, data);
+            };
+
+            const updateDriveFile = async (fileId, token, data) => {
+                try {
+                    const res = await fetch(
+                        `${UPLOAD_API}/${fileId}?uploadType=media`,
+                        {
+                            method: "PATCH",
+                            headers: {
+                                Authorization: `Bearer ${token}`,
+                                "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify(data),
+                        }
+                    );
+                    if (!res.ok) throw new Error(`Drive update failed: ${res.status}`);
+                    return true;
+                } catch (e) {
+                    console.error("Drive update error:", e);
+                    UI.showToast("Drive sync failed — data saved locally.", "info");
+                    localStorage.setItem("fs_farms", JSON.stringify(data.farms));
+                    return false;
+                }
+            };
+
+            return { readFromDrive, saveToDrive, updateDriveFile };
+        })();
+
+        /* ================================================================
+           MODULE: ALERTS
+           Rule-based alert engine based on crop stage + weather data.
+        ================================================================ */
+        const Alerts = (() => {
+            const checkAlerts = (farmData, weather) => {
+                const alerts = [];
+                const { stage, crop, soil } = farmData;
+                const { temp, humidity, wind } = weather;
+
+                // Temperature alerts
+                if (temp > 38) alerts.push({ type: "danger", text: `🌡️ Critical heat: ${temp}°C may cause heat stress in ${crop}. Apply shade nets and increase irrigation frequency.` });
+                else if (temp > 32) alerts.push({ type: "warning", text: `🌡️ High temperature (${temp}°C) — consider early morning watering to reduce evaporation stress.` });
+                else if (temp < 10) alerts.push({ type: "danger", text: `❄️ Near-frost conditions (${temp}°C) — protect tender seedlings with row covers immediately.` });
+
+                // Humidity alerts
+                if (humidity > 85) alerts.push({ type: "warning", text: `💧 High humidity (${humidity}%) increases fungal disease risk. Reduce overhead irrigation and improve canopy airflow.` });
+                if (humidity < 30) alerts.push({ type: "warning", text: `🏜️ Low humidity (${humidity}%) — increase irrigation frequency and consider foliar misting.` });
+
+                // Wind alerts
+                if (wind > 10) alerts.push({ type: "danger", text: `💨 Strong winds (${wind} m/s) — delay pesticide application. Stake tall plants to prevent lodging.` });
+
+                // Growth stage alerts
+                if (stage === "flowering") {
+                    alerts.push({ type: "info", text: `🌸 Flowering stage: Avoid pesticide applications between 6–10 AM to protect pollinators. Monitor for thrips and aphids daily.` });
+                    if (humidity > 70) alerts.push({ type: "warning", text: `🌸 High humidity during flowering increases blossom blight risk. Apply copper fungicide preventively.` });
+                }
+
+                if (stage === "germination") {
+                    alerts.push({ type: "info", text: `🌱 Germination: Maintain consistent soil moisture (60–70% field capacity). Avoid over-watering — check for damping-off symptoms.` });
+                }
+
+                if (stage === "ripening" || stage === "pre-harvest") {
+                    alerts.push({ type: "info", text: `🌾 Pre-harvest window: Begin monitoring for optimal harvest indicators. Reduce irrigation 7-10 days before harvest for quality.` });
+                }
+
+                // Soil alerts
+                if (soil === "sandy") alerts.push({ type: "info", text: `🏖️ Sandy soil detected: Increase irrigation frequency by 30% and apply mulch to reduce evaporation. Consider fertigation for efficient nutrient delivery.` });
+                if (soil === "clay") alerts.push({ type: "warning", text: `🧱 Clay soil: Ensure proper drainage to prevent waterlogging. Avoid irrigation immediately after rainfall.` });
+
+                // Daily reminders
+                alerts.push({ type: "info", text: `📅 Daily Reminder: Record today's observations (leaf color, pest sightings, soil moisture) in your farm log.` });
+
+                return alerts;
+            };
+
+            return { checkAlerts };
+        })();
+
+        /* ================================================================
+           MODULE: UI
+           All DOM rendering functions.
+        ================================================================ */
+        const UI = (() => {
+            // ---------- Loading overlay ----------
+            const showLoading = (step = "") => {
+                document.getElementById("loadingOverlay").classList.add("active");
+                if (step) document.getElementById("loadingStep").textContent = step;
+            };
+
+            const setLoadingStep = (step) => {
+                document.getElementById("loadingStep").textContent = step;
+            };
+
+            const hideLoading = () => {
+                document.getElementById("loadingOverlay").classList.remove("active");
+            };
+
+            // ---------- Toast ----------
+            const showToast = (message, type = "info") => {
+                const container = document.getElementById("toastContainer");
+                const icons = { success: "✅", error: "❌", info: "ℹ️" };
+                const toast = document.createElement("div");
+                toast.className = `toast ${type}`;
+                toast.innerHTML = `<span>${icons[type]}</span><span>${message}</span>`;
+                container.appendChild(toast);
+                setTimeout(() => {
+                    toast.style.animation = "toast-out 0.4s ease both";
+                    setTimeout(() => toast.remove(), 400);
+                }, 4500);
+            };
+
+            // ---------- Weather Widget ----------
+            const renderWeather = (w) => {
+                const widget = document.getElementById("weatherWidget");
+                widget.classList.add("visible");
+                document.getElementById("wLocation").textContent = w.location;
+                document.getElementById("wTemp").textContent = `${w.temp}°C`;
+                document.getElementById("wDesc").textContent = w.description + (w.isDemo ? " ⚠️ demo" : "");
+                document.getElementById("wIcon").textContent = w.icon;
+                document.getElementById("wHumidity").textContent = `${w.humidity}%`;
+                document.getElementById("wWind").textContent = `${w.wind} m/s`;
+                document.getElementById("wPressure").textContent = `${w.pressure} hPa`;
+                document.getElementById("wVis").textContent = `${w.visibility} km`;
+            };
+
+            // ---------- Insight Cards ----------
+            const CARD_DEFS = [
+                { key: "soilAssessment", cls: "card-soil", icon: "🪨", label: "Soil Assessment", title: "Soil Status" },
+                { key: "todayPlan", cls: "card-plan", icon: "📋", label: "Today's Action Plan", title: "Daily Plan" },
+                { key: "watering", cls: "card-watering", icon: "💧", label: "Irrigation Guide", title: "Watering" },
+                { key: "fertilizer", cls: "card-fertilizer", icon: "🌿", label: "Fertilizer Strategy", title: "Nutrition" },
+                { key: "pest", cls: "card-pest", icon: "🐛", label: "Pest & Disease Risk", title: "Pest Watch" },
+                { key: "harvest", cls: "card-harvest", icon: "🌾", label: "Harvest Forecast", title: "Harvest" },
+            ];
+
+            const renderInsightCards = (rec) => {
+                const grid = document.getElementById("cardsGrid");
+                grid.innerHTML = "";
+                document.getElementById("insightBadge").textContent = "AI Analysis Complete";
+
+                CARD_DEFS.forEach((def) => {
+                    const card = document.createElement("div");
+                    card.className = `insight-card ${def.cls} animate-in`;
+                    card.innerHTML = `
+        <div class="card-icon">${def.icon}</div>
+        <div class="card-label">${def.label}</div>
+        <div class="card-value">${def.title}</div>
+        <div class="card-detail">${rec[def.key] || "Data not available."}</div>
+      `;
+                    grid.appendChild(card);
+                });
+            };
+
+            // ---------- Alerts ----------
+            const renderAlerts = (alerts) => {
+                const list = document.getElementById("alertList");
+                if (!alerts || alerts.length === 0) {
+                    list.innerHTML = `<div style="font-size:0.85rem;color:var(--clay);text-align:center;padding:1rem 0;">No active alerts.</div>`;
+                    return;
+                }
+                list.innerHTML = alerts.map((a, i) => `
+      <div class="alert-item ${a.type}" style="animation-delay:${i * 0.08}s">
+        <span class="alert-icon">${a.type === "danger" ? "🚨" : a.type === "warning" ? "⚠️" : "ℹ️"}</span>
+        <span class="alert-text">${a.text}</span>
+      </div>
+    `).join("");
+            };
+
+            // ---------- Crop Rotation Card ----------
+            const renderNextCropCard = (nextCrop) => {
+                const card = document.getElementById("rotationCard");
+                const grid = document.getElementById("rotationGrid");
+                card.classList.add("visible");
+
+                grid.innerHTML = `
+      <div class="rotation-stat" style="grid-column:1/-1;">
+        <div class="rotation-stat-label">Recommended Next Crop</div>
+        <div class="next-crop-name">${nextCrop.nextCrop || "—"}</div>
+      </div>
+      <div class="rotation-stat" style="grid-column:1/-1;">
+        <div class="rotation-stat-label">Why This Crop?</div>
+        <div class="rotation-stat-value">${nextCrop.reason || "—"}</div>
+      </div>
+      <div class="rotation-stat">
+        <div class="rotation-stat-label">💧 Water Needs</div>
+        <div class="rotation-stat-value">${nextCrop.water || "—"}</div>
+      </div>
+      <div class="rotation-stat">
+        <div class="rotation-stat-label">🌿 Fertilizer Plan</div>
+        <div class="rotation-stat-value">${nextCrop.fertilizer || "—"}</div>
+      </div>
+      <div class="rotation-stat" style="grid-column:1/-1;">
+        <div class="rotation-stat-label">🪨 Soil Preparation</div>
+        <div class="rotation-stat-value">${nextCrop.soil || "—"}</div>
+      </div>
+    `;
+            };
+
+            // ---------- History Table ----------
+            const renderDashboard = () => {
+                const farms = State.getFarms();
+                const section = document.getElementById("historySection");
+                const body = document.getElementById("historyBody");
+                const badge = document.getElementById("historyBadge");
+
+                if (farms.length === 0) {
+                    section.classList.remove("visible");
+                    return;
+                }
+
+                section.classList.add("visible");
+                badge.textContent = `${farms.length} Records`;
+
+                body.innerHTML = farms.slice().reverse().map((f, i) => {
+                    const realIdx = farms.length - 1 - i;
+                    const dateStr = f.timestamp ? new Date(f.timestamp).toLocaleDateString() : "—";
+                    const canComplete = f.status === "active";
+                    return `
+        <tr>
+          <td>${escapeHtml(f.location)}</td>
+          <td><strong>${escapeHtml(f.crop)}</strong></td>
+          <td>${escapeHtml(f.soil)}</td>
+          <td>${escapeHtml(f.stage)}</td>
+          <td>${dateStr}</td>
+          <td><span class="status-badge status-${f.status}">${f.status}</span></td>
+          <td>
+            <button class="complete-btn" onclick="markCropCompleted(${realIdx})"
+              ${canComplete ? "" : "disabled"}>
+              ${canComplete ? "✓ Complete" : "Done"}
+            </button>
+          </td>
+        </tr>
+      `;
+                }).join("");
+            };
+
+            // Minimal XSS protection
+            const escapeHtml = (str = "") =>
+                String(str).replace(/[&<>"']/g, (c) =>
+                    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])
+                );
+
+            return { showLoading, setLoadingStep, hideLoading, showToast, renderWeather, renderInsightCards, renderAlerts, renderNextCropCard, renderDashboard };
+        })();
+
+        /* ================================================================
+           ORCHESTRATOR: runAnalysis
+           Main pipeline: validate → weather → AI → save → alert → render
+        ================================================================ */
+        async function runAnalysis() {
+            const data = Form.getFormData();
+            if (!Form.validateInput(data)) return;
+
+            const btn = document.getElementById("analyzeBtn");
+            btn.disabled = true;
+            btn.querySelector(".btn-inner").textContent = "⏳ Analyzing…";
+
+            try {
+                // Step 1: Fetch weather
+                UI.showLoading("Fetching real-time weather data…");
+                const weather = await Weather.fetchWeather(data.location);
+                State.setWeather(weather);
+                UI.renderWeather(weather);
+
+                // Step 2: AI recommendation
+                UI.setLoadingStep("Consulting AI agronomist (Gemini)…");
+                const rec = await AI.fetchAIRecommendation(data, weather);
+                State.setRec(rec);
+
+                // Step 3: Save to Drive / localStorage
+                UI.setLoadingStep("Saving farm record to cloud storage…");
+                const entry = {
+                    ...data,
+                    weather: {
+                        temp: weather.temp,
+                        humidity: weather.humidity,
+                        wind: weather.wind,
+                        description: weather.description,
+                    },
+                    recommendations: rec,
+                    status: "active",
+                    timestamp: new Date().toISOString(),
+                };
+
+                State.addFarm(entry);
+                const driveData = await Drive.readFromDrive();
+                driveData.farms = State.getFarms();
+                await Drive.saveToDrive(driveData);
+
+                // Step 4: Rule-based alerts
+                const alerts = Alerts.checkAlerts(data, weather);
+
+                // Step 5: Render everything
+                UI.hideLoading();
+                UI.renderInsightCards(rec);
+                UI.renderAlerts(alerts);
+                UI.renderDashboard();
+
+                // Collapse hero after first run
+                document.getElementById("dashboardHero").style.display = "none";
+
+                UI.showToast("✅ Analysis complete — AI insights loaded!", "success");
+            } catch (err) {
+                UI.hideLoading();
+                console.error("FarmSense analysis error:", err);
+                UI.showToast(`Analysis failed: ${err.message}`, "error");
+            } finally {
+                btn.disabled = false;
+                btn.querySelector(".btn-inner").textContent = "🔍 Analyze & Get AI Insights";
+            }
+        }
+
+        /* ================================================================
+           ORCHESTRATOR: markCropCompleted
+           Marks a farm entry as completed and triggers crop rotation AI.
+        ================================================================ */
+        async function markCropCompleted(farmIdx) {
+            const farms = State.getFarms();
+            if (!farms[farmIdx]) return;
+
+            UI.showLoading("Marking crop as completed…");
+
+            // Update status
+            State.updateFarm(farmIdx, { status: "completed" });
+
+            // Save to Drive
+            UI.setLoadingStep("Fetching crop history for rotation analysis…");
+            const driveData = await Drive.readFromDrive();
+            driveData.farms = State.getFarms();
+            await Drive.saveToDrive(driveData);
+
+            // Get next crop suggestion from AI
+            UI.setLoadingStep("AI is determining optimal next crop…");
+            const history = State.getFarms();
+            const nextCrop = await AI.suggestNextCrop(history);
+
+            UI.hideLoading();
+            UI.renderNextCropCard(nextCrop);
+            UI.renderDashboard();
+            UI.showToast("🌱 Crop marked complete! Next crop recommendation ready.", "success");
+        }
+
+        /* ================================================================
+           CONFIG UI HELPERS
+        ================================================================ */
+        function toggleConfig() {
+            const panel = document.getElementById("configPanel");
+            panel.classList.toggle("open");
+            if (panel.classList.contains("open")) {
+                // Populate fields from session
+                const cfg = Config.load();
+                document.getElementById("cfgGeminiKey").value = cfg.geminiKey || "";
+                document.getElementById("cfgWeatherKey").value = cfg.weatherKey || "";
+                document.getElementById("cfgDriveFileId").value = cfg.driveFileId || "";
+                document.getElementById("cfgDriveToken").value = cfg.driveToken || "";
+            }
+        }
+
+        function saveConfig() {
+            Config.save({
+                geminiKey: document.getElementById("cfgGeminiKey").value.trim(),
+                weatherKey: document.getElementById("cfgWeatherKey").value.trim(),
+                driveFileId: document.getElementById("cfgDriveFileId").value.trim(),
+                driveToken: document.getElementById("cfgDriveToken").value.trim(),
+            });
+            UI.showToast("Configuration saved for this session!", "success");
+            document.getElementById("configPanel").classList.remove("open");
+        }
+
+        // Expose renderDashboard to inline HTML
+        const renderDashboard = () => UI.renderDashboard();
+
+        /* ================================================================
+           BOOT
+        ================================================================ */
+        (function init() {
+            // Render existing history on load
+            UI.renderDashboard();
+
+            // Pre-populate form for demo convenience
+            const farms = State.getFarms();
+            if (farms.length === 0) {
+                document.getElementById("location").value = "Bangalore, India";
+                document.getElementById("crop").value = "Tomato";
+                document.getElementById("soil").value = "loamy";
+                document.getElementById("stage").value = "flowering";
+            }
+
+            console.log(
+                "%c🌱 FarmSense loaded.\n%cAdd your API keys via ⚙️ Configure APIs to enable full functionality.",
+                "color: #7ab872; font-size: 14px; font-weight: bold;",
+                "color: #c4a06a; font-size: 12px;"
+            );
+        })();
+    </script>
+</body>
+
+</html>                      
