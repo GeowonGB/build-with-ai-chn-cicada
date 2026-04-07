@@ -29,10 +29,10 @@ What makes it useful:
 ## Google AI Usage
 
 ### Tools / Models Used
-- Google Gemini 1.5 Flash API  
-- (Conceptually) Vertex AI for scalable AI processing  
+- Google Gemini 2.5 Flash API    
 - Google Drive API (simulated via localStorage)  
 - BigQuery (simulated via in-app data analysis)
+- OpenWeather(Weather API provider)
 
 ---
 
